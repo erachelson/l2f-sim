@@ -1,0 +1,16 @@
+# Definition of the domain :
+# MinX and MaxX
+-200 200
+# MinY and MaxY
+-200 200
+# MinZ and MaxZ
+0 2000
+# tstart and tend
+0 1000
+# windx and windy
+0 0.1
+# zi 
+1200
+# The list of Thermals created :
+# model   tBirth   CentreX   CentreY   CentreZ   zi   w_star   lifetime   ksi
+1 0 0 0 0 1400 2.69 600 0.157631
