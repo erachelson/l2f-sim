@@ -54,7 +54,7 @@ public:
     
     // scenario
     void createScenario(double deltaT, int model);
-    void writeScenario(double deltaT, double deltax, double deltay, double deltaz,std::string filename);
+    void writeScenario(double deltaT, double deltax, double deltay, double zslice,std::string filename);
 
     // save config
     void saveConfig(std::string filename);

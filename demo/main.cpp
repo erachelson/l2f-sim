@@ -16,6 +16,7 @@ using namespace std;
 int main()
 {
     srand (time(NULL));
+    double time_limit = 1000;
     
     /*--------------------------------------
      ------------- FLIGHT ZONE -------------
@@ -32,7 +33,7 @@ int main()
 	double ar=16.;
 	
     // Type of aircraft
-	BeelerGlider my_glider( m,ws,ar);
+	BeelerGlider my_glider(m,ws,ar);
 
     /*--------------------------------------
      ---------------- PILOT ----------------

@@ -1,8 +1,9 @@
-#include <L2F/flight_zone/flat_thermal_soaring_zone.hpp>
+#include <L2Fsim/flight_zone/flat_thermal_soaring_zone.hpp>
 #include <iostream>
 
 
 using namespace std;
+using namespace L2Fsim;
 
 int main(int argc, const char * argv[])
 {
@@ -11,61 +12,52 @@ int main(int argc, const char * argv[])
      -------------------------------------*/
     double time_limit = 1000;
     double deltaT     = 100;  // actualization of thermals
-    int minX  = -100;         // definition of box
-    int maxX  = 100;          // definition of box
-    int minY  = -100;         // definition of box
-    int maxY  = 100;          // definition of box
+    int minX  = -1000;        // definition of box
+    int maxX  = 1000;         // definition of box
+    int minY  = -1000;        // definition of box
+    int maxY  = 1000;         // definition of box
     int minZ  = 0;            // definition of box
     int maxZ  = 2000;         // definition of box
     double wx = 0.;           // definition of wind
     double wy = 0.;           // definition of wind
     int zi    = 1400.;        // definition of height of all thermals
     
-    // Initialization of a windfield
-    // Constructor 1 : flat_zone(Tend,minX,maxX,minY,maxY,minZ,maxZ,wx,wy,zi):tstart=0.
-    flat_thermal_soaring_zone my_zone(time_limit,minX,maxX,minY,maxY,minZ,maxZ,wx,wy,zi);
-    
-    // Constructor 2 : flat_zone(filename)
-    // flat_thermal_soaring_zone my_zone("DATA/config1.txt");
-    // flat_thermal_soaring_zone my_zone("DATA/configUneSeuleTherm.txt");
-    
-    /* Simulate a scenario of thermals */
-    // L2F::createScenario(deltaT,model);
-    // 1 : Allen model
+    int model = 1;            // definition of the model of thermals
+    // 1 : Allen     model
     // 2 : Childress model
-    // 3 : Lenschow model with Gaussian distribution
-    // 4 : Lenschow with Geodon model
-    // 5 : Lawrance model
-    // my_zone.createScenario(deltaT,1);
+    // 3 : Lenschow  model
+    // 4 : Geodon    model
+    // 5 : Lawrance  model
     
-    /* Write minimum info of scenario to rebuilt it */
-    // my_zone.saveConfig("DATA/config2.txt");
-    // my_zone.saveConfigToCSV("DATA/config2CSV.txt");
+    //------------------------//
+    // 1 : create an empty box
+    //------------------------//
+    flat_thermal_soaring_zone FZ(time_limit,minX,maxX,minY,maxY,minZ,maxZ,wx,wy,zi);
     
-    /* Write the whole wind DATA info in a file*/
-    // writeScenario(deltaT,deltax,deltay,zslice,filename)
-    my_zone.writeScenario(deltaT,5.,5.,650.,"data/wind.txt");
+    //-----------------------------------//
+    // 2 : Simulate a scenario of thermals
+    //-----------------------------------//
+    FZ.createScenario(deltaT,model);
     
-    //flat_zone(Tend,minX,maxX,minY,maxY,minZ,maxZ,dmin,wx,wy,zi):tstart=0.
-    L2F::flat_thermal_soaring_zone FZ(1000,-1000,1000,-1000,1000,0,2000,0.,0.,1200);
+    //---------------------------------------//
+    // 3 : write DATA for visualization zslice
+    //---------------------------------------//
+    // Write the whole wind DATA of a zslice in a file
+    double deltax = 5.;    // definition of the mesh precision in x direction
+    double deltay = 5.;    // definition of the mesh precision in y direction
+    double zslice = 650.;  // height of the windfield you want to write
+    FZ.writeScenario(deltaT,deltax,deltay,zslice,"DATA/wind.txt");
     
-    //flat_zone(filename)
-    //L2F::flat_thermal_soaring_zone FZ("../data/config.txt");
+    //---------------------------//
+    // 4 : save this configuration
+    //---------------------------//
+    FZ.saveConfig("DATA/config2.txt");
     
-    // saveConfig2
-    //FZ.saveConfig("../data/config2.txt");
+    //---------------------------------//
+    // 5 : call a previous configuration
+    //---------------------------------//
+    // Constructor 2
+    flat_thermal_soaring_zone FZ1("DATA/config1.txt");
+    flat_thermal_soaring_zone FZ_one_therm("DATA/configUneSeuleTherm.txt");
     
-    // createScenario(deltaT,model);
-    // 1 : Allen model
-    // 2 : Childress model
-    // 3 : Lenschow model with Gaussian distribution
-    // 4 : Lenschow with Geodon model
-    // 5 : Lawrance model
-    FZ.createScenario(deltaT,1);
-    
-    // writeScenario(deltaT,deltax,deltay,deltaz,filename)
-    FZ.writeScenario(deltaT,5.,5.,400.,"/Users/itienne/Desktop/3A/learningtofly/Code/2016-C++_L2F_library/FZ/DATA/wind.txt");
-    
-    // saveConfig(filename)
-    FZ.saveConfig("DATA/config.txt");
 }
