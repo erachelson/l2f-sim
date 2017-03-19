@@ -7,8 +7,8 @@ EXEC=compile
 all: $(EXEC)
 	./main
 
-$(EXEC):demo/main.cpp L2F/flight_zone/flat_thermal_soaring_zone.cpp L2F/flight_zone/thermal/std_thermal.cpp
-	$(CC) -o main demo/main.cpp L2F/flight_zone/flat_thermal_soaring_zone.cpp L2F/flight_zone/thermal/std_thermal.cpp -I.
+$(EXEC):demo/main.cpp L2Fsim/flight_zone/flat_thermal_soaring_zone.cpp L2Fsim/flight_zone/thermal/std_thermal.cpp
+	$(CC) -o main demo/main.cpp L2Fsim/flight_zone/flat_thermal_soaring_zone.cpp L2Fsim/flight_zone/thermal/std_thermal.cpp -I.
 
 energy:
 	python3 python_plot/energy.py
