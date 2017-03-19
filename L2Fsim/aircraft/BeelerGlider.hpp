@@ -134,36 +134,35 @@ public:
     
     BeelerGlider& is_in_model(std::vector<double> &st,std::vector<double> &cd) {
         
-        double limit_angle = 0.3;
+        double limit_gamma_angle = 0.3;
+        double limit_alphagamma_angle = 0.3;
         
         if(st.at(2) < 0)
         {
             printf("The aircraft is below 0 (altitude)\n");
             exit(-1);
         }
-        if(st.at(4) > limit_angle){
+        if(st.at(4) > limit_gamma_angle){
             printf("The aircraft have an inclinaison (gamma) > 17 degree\n");
             exit(-1);
         }
-        if(st.at(4) < -limit_angle){
+        if(st.at(4) < -limit_gamma_angle){
             printf("The aircraft have an inclinaison (gamma) < -17 degree\n");
             exit(-1);
         }
         
-        if(st.at(4) + cd.at(1) < -limit_angle){
+        if(st.at(4) + cd.at(1) < -limit_alphagamma_angle){
             printf("The aircraft have an bank (gamma + alpha) < -17 degree\n");
             exit(-1);
         }
         
-        if(st.at(4) + cd.at(1) > limit_angle){
+        if(st.at(4) + cd.at(1) > limit_alphagamma_angle){
             printf("The aircraft have an bank (gamma + alpha) > 17 degree\n");
             exit(-1);
         }
         
-
         return *this;
     }
-
 
 protected:
 

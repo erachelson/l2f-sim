@@ -31,7 +31,7 @@ namespace L2Fsim {
     // implicitly a<b
     inline int rand_int(int a, int b)
     {
-        return rand()%(b-a) +a;
+        return (rand()%(b-a) +a);
     }
 
     // produce a number following a normal distribution
@@ -161,7 +161,7 @@ namespace L2Fsim {
         float return_value;
 
         /*** Exponential calculation ***/
-        exp_value = exp( -a*(x-c));
+        exp_value = exp( -1/a*(x-c));
 
         /*** Final sigmoid value ***/
         return_value = 1 / (1 + exp_value);
