@@ -2,6 +2,7 @@
 #include <L2Fsim/aircraft/BeelerGlider.hpp>
 #include <L2Fsim/pilot/passive_pilot.hpp>
 #include <L2Fsim/flight_zone/flat_thermal_soaring_zone.hpp>
+#include <L2Fsim/flight_zone/flat_zone.hpp>
 #include <L2Fsim/stepper/euler_integrator.hpp>
 #include <L2Fsim/stepper/RKF45.hpp>
 #include <L2Fsim/pilot/pilot_genQlearn.hpp>
@@ -23,7 +24,8 @@ int main()
      -------------------------------------*/
     
     // read config1.txt
-    flat_thermal_soaring_zone my_zone("DATA/config1.txt");
+    flat_zone my_zone;
+    //flat_thermal_soaring_zone my_zone("DATA/config1.txt");
     
     /*--------------------------------------
      --------------- AIRCRAFT --------------
@@ -39,9 +41,7 @@ int main()
      ---------------- PILOT ----------------
      -------------------------------------*/
     //passive_pilot my_pilot;
-
     pilot_genQlearn my_pilot;
-    my_pilot.output_dim = 3;
 
     /*--------------------------------------
      --------------- STEPPER ---------------
@@ -62,11 +62,11 @@ int main()
 
     // Initialization of the main parameter
 	// Here we choose the time limit for our simulation (second)
-	double dt = 0.001; // 1 ms as dt
+	double dt = 0.01; // 1 ms as dt
 	double time_current = 0;
 
 	// Initilation of the position // TODO with a config file
-	double x0 = -800.;// m
+	double x0 = -500.;// m
 	double y0 = 0.;// m
 	double z0 = 1000.;// m
 	double V0 = 20.; // m/s
