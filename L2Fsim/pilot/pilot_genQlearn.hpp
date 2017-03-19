@@ -21,10 +21,11 @@ class pilot_genQlearn : public pilot
     int dim_out;
     // La dimension de la Qtable
     int dim_Q;
+    int dim_Theta;
     // L'incrementation de la Qtable
     double alpha=1;
     // Propagation dans la Qtable
-    double gamma=0.8;
+    double gamma=0.9;
     // Le degree d'exploration
     double epsilon=0.01;
     double masse = 1.35;
@@ -50,6 +51,7 @@ class pilot_genQlearn : public pilot
         dim_in = dimin;
         dim_out = dimout;
         dim_Q = 3;
+        dim_Theta = dim_Q*(dim_Q-1)/2 + dim_Q;
         // Initialisation de la Qtable
 
         obs_prev = obsinit;
@@ -167,10 +169,13 @@ class pilot_genQlearn : public pilot
         printf("dh : %lf\n",vQ.at(1));
         printf("sigma : %lf\n",vQ.at(2));
         */
+        std::vector<double> newQtable;
+        std::vector<double>(dim_Theta, 0.).swap(newQtable);
+        
         for(i=0;i<n;i++){
 
             dQ = vQ.at(i);
-            Qtable.at(i) += alpha*(reward + gamma*maxQ - Q)*dQ;
+            newQtable.at(i) = Qtable.at(i) + alpha*(reward + gamma*maxQ - Q)*dQ;
             /*
 
             printf("dQ : %lf\n",dQ);
@@ -181,6 +186,7 @@ class pilot_genQlearn : public pilot
                 exit(-1);
             }
         }
+        Qtable = newQtable;
 
     }
 
