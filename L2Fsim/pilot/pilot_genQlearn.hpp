@@ -25,10 +25,9 @@ class pilot_genQlearn : public pilot
     // L'incrementation de la Qtable
     double alpha=1;
     // Propagation dans la Qtable
-    double gamma=0.9;
+    double gamma=0.99;
     // Le degree d'exploration
     double epsilon=0.01;
-    double masse = 1.35;
     // La Qtable
     std::vector<double> Qtable;
     // Les observables precedants
@@ -39,19 +38,19 @@ class pilot_genQlearn : public pilot
     // L'incrementation des commandes
     double incrementation_command_sigma=0.003;
     double incrementation_command_beta=0.000;
-    double incrementation_command_alpha=0.00;
+    double incrementation_command_alpha=0.003;
     double AngleMax = 0.2;
     double limit = 0.5;
     double coeff = -1. / AngleMax * std::log(2./(limit+1.) - 1.);
-    double dt = 0.01;
+    double dt = 0.001;
 
     // Constructor
-    pilot_genQlearn(int dimin = 4,int dimout=3,std::vector<double> obsinit={1000.,20.,0.,0.}){
+    pilot_genQlearn(int dimin = 4,int dimout=3,std::vector<double> obsinit={800.,20.,0.,0.}){
 
         dim_in = dimin;
         dim_out = dimout;
-        dim_Q = 3;
-        dim_Theta = dim_Q*(dim_Q-1)/2 + dim_Q;
+        dim_Q = 4;
+        dim_Theta = dim_Q*(dim_Q+1)/2 + dim_Q;
         // Initialisation de la Qtable
 
         obs_prev = obsinit;
@@ -59,7 +58,7 @@ class pilot_genQlearn : public pilot
         std::vector<double>(dimout, 0.).swap(action_prev);
         std::vector<double>(dimout, 0.).swap(command_actual);
 
-        std::vector<double>(dim_Q*(dim_Q-1)/2 + dim_Q, 0.).swap(Qtable);
+        std::vector<double>(dim_Theta, 0.).swap(Qtable);
         //Qtable = {-42.136900, 56.290775, 10.637509, -0.017635, 0.004555, 13.542521, 0.265058, 0.891439, 0.018497, 0.013512, -0.003882};
 
 
@@ -100,7 +99,7 @@ class pilot_genQlearn : public pilot
         double sigma_ = command.at(2);
         double gamma_angle = obs.at(2);
 
-        std::vector<double> concat = {sigmoid( dgamma, 0.05, 0) - 0.5,sigmoid( dh, 4, 0) - 0.5,sigmoid( sigma_, 0.3, 0) - 0.5};
+        std::vector<double> concat = {sigmoid( dgamma, 0.05, 0) - 0.5,sigmoid( dh, 2, 0) - 0.5,sigmoid( sigma_, 0.3, 0) - 0.5,sigmoid( alpha_, 0.1, 0) - 0.5};
 
         if (vQ.size() != 0) {
             printf("size vQ = %d : error\n",vQ.size());
@@ -116,9 +115,9 @@ class pilot_genQlearn : public pilot
 
         for(i = 0;i<concat.size();i++){
             for(j=0;j<i+1;j++){
-                if (i != j) {
+                
                     vQ.push_back(concat.at(i)*concat.at(j));
-                }
+                
             }
         }
         
@@ -133,7 +132,10 @@ class pilot_genQlearn : public pilot
 
         int i;
         for(i=0;i<vQ.size();i++){
-            Q += Qtable.at(i)*vQ.at(i);
+            
+                Q += Qtable.at(i)*vQ.at(i);
+            
+            
         }
     }
     // Get dQ value
@@ -160,14 +162,17 @@ class pilot_genQlearn : public pilot
         
         std::vector<double> vQ;
         get_vQ(obs_prev,obs_prevprev,command_actual,vQ);
-        /*
+        
+        printf("begin print parameters\n");
         printf("maxQ : %lf\n",maxQ);
         printf("reward : %lf\n",reward);
         printf("Q : %lf\n",Q);
-        
+        /*
         printf("dgamma : %lf\n",vQ.at(0));
         printf("dh : %lf\n",vQ.at(1));
         printf("sigma : %lf\n",vQ.at(2));
+        printf("obs, h : %lf\n",obs.at(0));
+        printf("obs, V : %lf\n",obs.at(1));
         */
         std::vector<double> newQtable;
         std::vector<double>(dim_Theta, 0.).swap(newQtable);
@@ -246,12 +251,12 @@ class pilot_genQlearn : public pilot
         printf("Size beta : %d\n",action_tot_beta.size());
         printf("Size sigma : %d\n",action_tot_beta.size());
         */
-        /*
-        if(action_tot_alpha.size() == 3 &&action_tot_beta.size() == 3&&action_tot_beta.size() == 3){
+        
+        if(action_tot_alpha.size() != 3 &&action_tot_beta.size() != 3&&action_tot_beta.size() != 3){
             printf("Size not ok\n");
             exit(-1);
         }
-        */
+        
         //printf("choice of maxQ\n");
         for(i=0;i<action_tot_alpha.size();i++){
             for(j=0;j<action_tot_beta.size();j++){
@@ -282,12 +287,12 @@ class pilot_genQlearn : public pilot
         
         int i,j,p;
         double max_Q = -10000000000;
-        /*
-        if(action_tot_alpha.size() == 3 &&action_tot_beta.size() == 3&&action_tot_beta.size() == 3){
+        
+        if(action_tot_alpha.size() != 3 &&action_tot_beta.size() != 3&&action_tot_beta.size() != 3){
             printf("Size not ok\n");
             exit(-1);
         }
-        */
+        
         
         
         double Q;
@@ -318,23 +323,23 @@ class pilot_genQlearn : public pilot
         // Obs[0] -> la hauteur h
         // Obs[1] -> la vitesse V
         
-        reward = ((obs[0] - obs_prec[0]) + 1/2/9.81*(obs[1]*obs[1] - obs_prec[1]*obs_prec[1]))/dt;
+        reward = ((obs[0] - obs_prec[0]) + 1/(2*9.81)*(obs[1]*obs[1] - obs_prec[1]*obs_prec[1]))/dt;
 
     }
     
     void get_possible_action(std::vector<double> &obs,std::vector<double> &action_tot_alpha,std::vector<double> &action_tot_beta,std::vector<double> &action_tot_sigma){
     
         
-        action_tot_beta = {-incrementation_command_beta,0,incrementation_command_beta};
+        action_tot_beta = {-incrementation_command_beta,0.,incrementation_command_beta};
         
         // sigma condition
-        action_tot_sigma = {-incrementation_command_sigma,0,incrementation_command_sigma};
+        action_tot_sigma = {-incrementation_command_sigma,0.,incrementation_command_sigma};
         if (command_actual.at(2) >= 0.6) {
-            action_tot_sigma = {-2*incrementation_command_sigma,-incrementation_command_sigma,0};
+            action_tot_sigma = {-2*incrementation_command_sigma,-incrementation_command_sigma,0.};
         }
         
         if (command_actual.at(2) < -0.6) {
-            action_tot_sigma = {2*incrementation_command_sigma,incrementation_command_sigma,0};
+            action_tot_sigma = {2*incrementation_command_sigma,incrementation_command_sigma,0.};
         }
         
         
@@ -342,7 +347,7 @@ class pilot_genQlearn : public pilot
         if(std::abs(obs.at(2) + command_actual.at(0)) < 0.3){
             
         //printf("no problem for command\n");
-        action_tot_alpha = {-incrementation_command_alpha,0,incrementation_command_alpha};
+        action_tot_alpha = {-incrementation_command_alpha,0.,incrementation_command_alpha};
         
         
         
@@ -377,6 +382,16 @@ class pilot_genQlearn : public pilot
         
     }
     
+    pilot_genQlearn& out_of_range(std::vector<double> &obs,
+                          std::vector<double> &command)
+    {
+        std::vector<double>(3, 0.).swap(command);
+        command.at(2) = 0.4;
+        
+        obs_prevprev = obs_prev;
+        obs_prev = obs;
+        command_actual = command;
+    }
     
 
 };

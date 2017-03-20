@@ -10,6 +10,10 @@ class pilot {
 public:
 	virtual pilot& operator()(std::vector<double> &observation,
 							  std::vector<double> &command) =0;
+    
+    virtual pilot& out_of_range(std::vector<double> &observation,
+                              std::vector<double> &command) =0;
+    
 };
 }
 

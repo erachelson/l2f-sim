@@ -27,7 +27,7 @@ class euler_integrator : public stepper {
 	/* methods */
 public:
 	/** Constructor */
-	euler_integrator(double dt_t=0.0001) : delta_t(dt_t) {
+	euler_integrator(double dt_t=0.001) : delta_t(dt_t) {
         time = 0;
     }
 	/** Stepping operator 
@@ -48,8 +48,14 @@ public:
 		ac.get_state(x);
 		ac.observation(obs);
 		if (time==0.) {obs_old=obs;}
+         
 
-		pl(obs, u);
+         if (std::sqrt(x.at(0)*x.at(0) +x.at(1)*x.at(1)) > 1200.) {
+             pl.out_of_range(obs,u);
+         } else {
+             pl(obs, u);
+         }
+		
 
         std::vector<double> concat;
         concat.reserve( x.size() + u.size() ); // preallocate memory
@@ -76,9 +82,12 @@ public:
 
 			time += delta_t;
 
+
 		}
-		//printf("Finishing of the first step\n" );
          
+
+         
+		//printf("Finishing of the first step\n" )
 		obs_old=obs;
          
          // We verify if the model is correct :
