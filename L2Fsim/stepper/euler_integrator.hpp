@@ -17,9 +17,9 @@ class euler_integrator : public stepper {
     /** Current time of the simulation */
 	double time;
     /** File name for the log*/
-    std::string name_file = "DATA/data_plane.txt";
+    std::string name_file = "data/data_plane.txt";
     /** File name for the log*/
-    std::string name_file1 = "DATA/energy.txt";
+    std::string name_file1 = "data/energy.txt";
 
     /** Precedant observation */
     std::vector<double> obs_old;
