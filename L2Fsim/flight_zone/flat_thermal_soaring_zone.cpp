@@ -1,13 +1,14 @@
 #include <L2Fsim/flight_zone/flat_thermal_soaring_zone.hpp>
 
 namespace L2Fsim {
-    
+
 using namespace std;
 
 /*---------------------------------------------------------------------------------------
  ---------------------------            CONSTRUCTOR             -------------------------
  --------------------------------------------------------------------------------------*/
 
+///Constructor. Create an empty zone defined by its dimension, wind, end time and height of thermals.
 flat_thermal_soaring_zone::flat_thermal_soaring_zone(double Tend,int miX,int maX,int miY,int maY,
                                                      int miZ,int maZ,double wx,double wy,double Zi)
 {
@@ -24,6 +25,10 @@ flat_thermal_soaring_zone::flat_thermal_soaring_zone(double Tend,int miX,int maX
     zi=Zi;
 }
 
+///Constructor. Read a saved thermal scenario in order to play an identical simulation of the flight zone.
+/**
+    \param filename a file including a thermal scenario, saved thanks to the saveConfig function.
+*/
 flat_thermal_soaring_zone::flat_thermal_soaring_zone(string filename)
 {
     ifstream file(filename);
@@ -47,7 +52,7 @@ flat_thermal_soaring_zone::flat_thermal_soaring_zone(string filename)
             case 5: stream>>windx>>windy;break;
             case 6: stream>>zi;break;
         }
-        
+
         if(readline>6)
         {
             double th[]={0,0.0,0,0,0,0.0,0.0,0,0.0};
@@ -80,17 +85,22 @@ flat_thermal_soaring_zone::flat_thermal_soaring_zone(string filename)
 /*---------------------------------------------------------------------------------------
  ---------------------------          PRIVATE METHODS           -------------------------
  --------------------------------------------------------------------------------------*/
-
+///Define the maximum number of thermals in the zone.
 int flat_thermal_soaring_zone::nbMaxThermals()
 {
     double ziAverage = 1200;
     return floor(0.6*(maxX-minX)*(maxY-minY)/(dmin*ziAverage));
 }
 
+///Define the center of a new thermal, dependent on positions of other thermals.
+/**
+    \param center a list of the thermal centers in the simulation.
+    \param t the simulated time.
+*/
 bool flat_thermal_soaring_zone::createThermalCenter(vector<double>& center, double t)
 {
     bool newCenterIsValid = false;
-    
+
     // find the farthest point from each thermals
     double farthestDist=0.;
     double farthestPointFromThermalsX=0.;
@@ -120,7 +130,7 @@ bool flat_thermal_soaring_zone::createThermalCenter(vector<double>& center, doub
              }
          }
     }
-    
+
     // we're going to create the center according to a normal law around the farthestPoint we founded
     // nevertheless, it needs to be in the windfield and not in conflict with other thermals :
     double newCenterX=minX-1.;
@@ -128,17 +138,17 @@ bool flat_thermal_soaring_zone::createThermalCenter(vector<double>& center, doub
     while (!newCenterIsValid)
     {
         newCenterIsValid = true;
-        
+
         newCenterX = farthestPointFromThermalsX+normalLaw()*dmin*2.5;
         newCenterY = farthestPointFromThermalsY+normalLaw()*dmin*2.5;
-        
+
         // center is in the field
         while ( newCenterX<minX+dmin || newCenterX>maxX-dmin || newCenterY<minY+dmin || newCenterY>maxY-dmin)
         {
             newCenterX = farthestPointFromThermalsX+normalLaw()*dmin*2.5;
             newCenterY = farthestPointFromThermalsY+normalLaw()*dmin*2.5;
         }
-        
+
         // Check it is valid for all the other centers
         for(auto& th: thermals)
         {
@@ -151,16 +161,20 @@ bool flat_thermal_soaring_zone::createThermalCenter(vector<double>& center, doub
                 newCenterIsValid=newCenterIsValid*newCenterIsValidForThisThermal;
             }
         }
-        
+
     }
     center.push_back(newCenterX);
     center.push_back(newCenterY);
     center.push_back(0.);
-    
+
     // return a boolean
     return(newCenterIsValid);
 }
 
+///Count the number of thermals alive at time t.
+/**
+    \param t the simulated time.
+*/
 int flat_thermal_soaring_zone::numberAliveAtTime(double t)
 {
     int count=0;
@@ -174,6 +188,7 @@ int flat_thermal_soaring_zone::numberAliveAtTime(double t)
     }
     return count;
 }
+
 
 double flat_thermal_soaring_zone::environSink(double z, double t)
 {
@@ -194,30 +209,37 @@ double flat_thermal_soaring_zone::environSink(double z, double t)
         }
 
     }
-    
+
     w_e = - massFlowTh / (regX*regY - areaTh);
-    
+
     if(w_e>0.0)
     {
         w_e=0.0;
     }
-    
-    return(w_e);	
+
+    return(w_e);
 }
-    
+
 /*---------------------------------------------------------------------------------------
  ---------------------------           PUBLIC METHODS           -------------------------
  --------------------------------------------------------------------------------------*/
 
-    
-// WIND
+
+/// Computes the wind vector w, at point (x,y,z), at time t.
+/**
+    \param x a horizontal coordinate of the system (x,y,z).
+    \param y a horizontal coordinate of the system (x,y,z).
+    \param z the vertical coordinate of the system (x,y,z).
+    \param t the time.
+    \param w the wind vector: windx, windy, windz.
+*/
 flat_thermal_soaring_zone& flat_thermal_soaring_zone::wind
     (double x, double y, double z, double t, vector<double> &w)
 {
     vector<double>(3, 0.).swap(w);
     w[0]=windx;w[1]=windy;w[2]=0.;
     double  w_e=environSink(z,t);
-    
+
     for(auto& therm: thermals)
     {
         if (therm->isAlive(t))
@@ -225,7 +247,7 @@ flat_thermal_soaring_zone& flat_thermal_soaring_zone::wind
             therm->wind(x,y,z,t,w);
         }
     }
-    
+
     // compute environmental sink rate
     if (thermals.size()!=0) {
         if(thermals[0]->getModel()==1)
@@ -233,27 +255,30 @@ flat_thermal_soaring_zone& flat_thermal_soaring_zone::wind
             w[2] = w[2] + w_e;
         }
     }
-    
+
     return *this;
 }
 
-    
-// create scenario
+///Simulate a scenario of thermals.
+/**
+    \param deltaT the interval of thermal actualization.
+    \param model the chosen model for the simulation.
+*/
 void flat_thermal_soaring_zone::createScenario(double deltaT,int model)
 {
     cout << "--> Create scenario" << endl;
     int nb_Alive_t,total=0;
     int nbThermalmax=nbMaxThermals();
-    
+
     for (double t=tstart; t<tend ; t=t+deltaT)
     {
         cout << "t = " << t << endl;
         nb_Alive_t=numberAliveAtTime(t);
-        
+
         while(nb_Alive_t<nbThermalmax)
         {
             vector<double> center;
-            
+
             if(createThermalCenter(center,t))
             {
                 //std_thermal(mod,tB,XC0,YC0,ZC0,Zi,wstar,Lifetime,Ksi,read):
@@ -267,17 +292,24 @@ void flat_thermal_soaring_zone::createScenario(double deltaT,int model)
     }
     cout << endl;
 }
-    
-// write scenario z-slice
+
+///Write the whole wind data for the visualization of a zslice in a file.
+/**
+    \param deltaT the interval of thermal actualization.
+    \param deltax the definition of the mesh precision onto x-axis.
+    \param deltay the definition of the mesh precision onto y-axis.
+    \param zslice the height of the windfield you want to write.
+    \param filename the name of the file you want to write data.
+*/
 void flat_thermal_soaring_zone::writeScenario
     (double deltaT, double deltax, double deltay, double zslice,string filename)
 {
     cout << "--> Write scenario" << endl;
     ofstream file;
     file.open (filename);
-    
+
     file << "t x y z updraft"<<endl;
-    
+
     for (double t=tstart; t<tend ; t=t+deltaT) {
         cout << "t = " << t << endl;
         vector<double> w;
@@ -302,7 +334,11 @@ void flat_thermal_soaring_zone::writeScenario
     file.close();
     cout << endl;
 }
-    
+
+///Save a thermal scenario in order to play it again in an other simulation.
+/**
+    \param filename the name of the .txt file you want to save the scenario.
+*/
 void flat_thermal_soaring_zone::saveConfig(string filename)
 {
     cout << "--> Save config"<< endl;
@@ -320,10 +356,10 @@ void flat_thermal_soaring_zone::saveConfig(string filename)
     <<windx<<" "<<windy<<endl
     <<"# zi "<<endl
     <<zi<<endl;
-    
+
     myfile<<"# The list of Thermals created :"<<endl
     <<"# model   tBirth   CentreX   CentreY   CentreZ   zi   w_star   lifetime   ksi"<<endl;
-    
+
     for(auto th: thermals)
     {
         myfile<<th->getModel()<< " " <<th->gettBirth() << " " << th->getCenter()[0]<<" "<<th->getCenter()[1]<<" "<<th->getCenter()[2]<<" "<<th->getzi()<< " " << th->getw_star() << " " << th->getlifeTime()  << " " << th->getksi()<< endl;
@@ -331,12 +367,16 @@ void flat_thermal_soaring_zone::saveConfig(string filename)
     myfile.close();
 }
 
+///Save a thermal scenario in order to play it again in an other simulation.
+/**
+    \param filename the name of the .csv file you want to save the scenario.
+*/
 void flat_thermal_soaring_zone::saveConfigToCSV(string filename)
 {
     ofstream myfile;
     myfile.open (filename);
     myfile<<"model tBirth CentreX CentreY CentreZ zi w_star lifetime ksi"<<endl;
-    
+
     for(auto th: thermals)
     {
         myfile<<th->getModel()<< " " <<th->gettBirth() << " " << th->getCenter()[0]<<" "<<th->getCenter()[1]<<" "<<th->getCenter()[2]<<" "<<th->getzi()<< " " << th->getw_star() << " " << th->getlifeTime()  << " " << th->getksi()<< endl;
