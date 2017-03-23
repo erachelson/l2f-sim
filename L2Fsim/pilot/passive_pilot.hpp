@@ -24,9 +24,6 @@ public:
         std::vector<double>(3, 0.).swap(command);
         command.at(2) = 0.4;
         
-        obs_prevprev = obs_prev;
-        obs_prev = obs;
-        command_actual = command;
     }
 };
 
